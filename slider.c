@@ -390,11 +390,11 @@ int *copy(int *src) { /* Copy Ninja Kakashi .   *     .   `    */
 } /*    .       /          -               ,                   */
 ////////////////////////////////////////////////////////////////
 void escort(int fig) /*                                       */
-{ /*                                                          */
+{ /*                                     .           .    .   */
     int *target = sqrcoor[fig]; /*                            */
-    int *missile = coor[fig]; /*                              */
+    int *missile = coor[fig]; /*           .         .        */
     int *dst; /*                                              */
-    /*                                                        */
+    /*                   .                                    */
     journey(0, target); /* put first zero at target position  */
     push_lock(fig - 1); /* lock that square                   */
     target = copy(add(target, down)); /* next target          */
@@ -403,89 +403,89 @@ void escort(int fig) /*                                       */
 	journey(1, dst); /* clear path for the missile        */
 	pop_lock(); /* unlock missile square                  */
 	erase(missile); /*                                    */
-	svitch(1, missile); /*                                */
+	svitch(1, missile); /*      .                         */
 	draw_figure(fig); /*                                  */
 	pooz(1); /*                                           */
     } /*                                                      */
-    erase(missile); /*                                        */
+    erase(missile); /*                          +             */
     svitch(0, missile); /*                                    */
-    draw_figure(fig); /*                                      */
+    draw_figure(fig); /*                .                     */
     pooz(1); /*                                               */
 } /*                                                          */
 ////////////////////////////////////////////////////////////////
 /* OK each figure takes 4 bits and there are 16 squares so we  *
  * can represent each position with 4x16 = 64 bits             */
-struct pos {
-    int64_t     board;
-    int         zero[NZR]; // no figure squares
-    struct pos *parent;
-};
-// initial and final positions
-struct pos ipos = { 0, {0, 0}, NULL };
-struct pos fpos = { 0x123456789abcde00, { 0, 0 }, NULL };
-#define shift(SQR) ((SIZ - 1 - (SQR)) << 2)
+struct pos { /*                                                */
+    int64_t     board; /*                                      */
+    int         zero[NZR]; /* no figure squares                */
+    struct pos *parent; /*                                     */
+}; /*                                                          */
+/* initial and final positions                                 */
+struct pos ipos = { 0, {0, 0}, NULL }; /*                      */
+struct pos fpos = { 0x123456789abcde00, { 0, 0 }, NULL }; /*   */
+#define shift(SQR) ((SIZ - 1 - (SQR)) << 2) /*                 */
 //^^////////////////////////////////////////////////////////////
 /* .......................... get figure from ze board at sqr */
-int get(int64_t board, int sqr)
-{
-    int64_t mask = 0xf;
-    int shift = shift(sqr);
-        
-    mask <<= shift;
-
-    return (board & mask) >> shift;
-}
-//vv////////////////////////////////////////////////////////////
-/* set board figure at sqr                                    */
-void set(int64_t *board, int sqr, int64_t figure)
-{
-    int64_t mask = 0xf;
-    int shift = shift(sqr);
-        
-    mask <<= shift;
-    *board &= ~mask;
-    figure <<= shift;
-    *board |= figure;
-}
-void convert(void)
-{
-    int fig, sqr;
-    for (int j = 1; j <= SIZ; j++) {
-	fig = sqrfig[j];
-	sqr = j - 1;
-	if (fig == 0) {
-	    ipos.zero[0] = sqr;
-	} else if (fig == SIZ - 1) {
-	    ipos.zero[1] = sqr;
-	} else {
-	    set(&(ipos.board), sqr, fig);
-	}
-    }
-}
-//xx////////////////////////////////////////////////////////////
-void xch(int64_t *board, int src, int dst)
-{
-    int fig[] = { get(*board, src), get(*board, dst) };
-
-    set(board, dst, fig[0]);
-    set(board, src, fig[1]);
-}
-//qq////////////////////////////////////////////////////////////
-// infut: p   - current position
-//        j   - zero index
-//        dst - destination sqr
-// oufut: new position
-struct pos *move(struct pos *p, int j, int dst)
-{
-    int src = p->zero[j];
-    struct pos *q = malloc(sizeof *q);
-
-    *q = *p; // Copy Ninja Kakashi
-    q->zero[j] = dst;
-    xch(&(q->board), src, dst);
-
-    return q;
-}
+int get(int64_t board, int sqr) /*                            */
+{ /*                                                          */
+    int64_t mask = 0xf; /*                                    */
+    int shift = shift(sqr); /*                                */
+    /*                                                        */
+    mask <<= shift; /*                                        */
+    /*                                                        */
+    return (board & mask) >> shift; /*                        */
+} /*                                                          */
+////////////////////////////////////////////////////////////////
+void set(int64_t *board, int sqr, int64_t figure) /*          */
+{ /*                                                          */
+    int64_t mask = 0xf; /*                                    */
+    int shift = shift(sqr); /*                                */
+    /*                                                        */
+    mask <<= shift; /*                                        */
+    *board &= ~mask; /*                                       */
+    figure <<= shift; /*                                      */
+    *board |= figure; /*                                      */
+} /*                                                          */
+////////////////////////////////////////////////////////////////
+void convert(void) /*                                         */
+{ /*                                                          */
+    int fig, sqr; /*                                          */
+    for (int j = 1; j <= SIZ; j++) { /*                       */
+	fig = sqrfig[j]; /*                                   */
+	sqr = j - 1; /*                                       */
+	if (fig == 0) { /*                                    */
+	    ipos.zero[0] = sqr; /*                            */
+	} else if (fig == SIZ - 1) { /*                       */
+	    ipos.zero[1] = sqr; /*                            */
+	} else { /*                                           */
+	    set(&(ipos.board), sqr, fig); /*                  */
+	} /*                                                  */
+    } /*                                                      */
+} /*                                                          */
+////////////////////////////////////////////////////////////////
+void xch(int64_t *board, int src, int dst) /*                 */
+{ /*                                                          */
+    int fig[] = { get(*board, src), get(*board, dst) }; /*    */
+    /*                                                        */
+    set(board, dst, fig[0]); /*                               */
+    set(board, src, fig[1]); /*                               */
+} /*                                                          */
+////////////////////////////////////////////////////////////////
+/* infut: p   - current position                               *
+          j   - zero index                                     *
+          dst - destination sqr                                *
+   oufut: new position                                         */
+struct pos *move(struct pos *p, int j, int dst) /*             */
+{ /*                                                           */
+    int src = p->zero[j]; /*                                   */
+    struct pos *q = malloc(sizeof *q); /*                      */
+    /*                                                         */
+    *q = *p; /* Copy Ninja Kakashi                             */
+    q->zero[j] = dst; /*                                       */
+    xch(&(q->board), src, dst); /*                             */
+    /*                                                         */
+    return q; /*                                               */
+}////////////////////////////////////////////////////////////////
 /* OK zo we basically access the stack through a head vhich    *
  * pointer is named stack pointer and it stays fixed, all the  *
  * action is at the node following it (pushing and popping)    */
@@ -499,149 +499,156 @@ struct stack {           //     //      //  //  //////////node//
 struct stack ahead_rec = { NULL, NULL }; // head
 struct stack *rec = &ahead_rec;          // stkptr
 ////////////////////////////////////////////////////////////////
-int push(struct stack *stkptr, struct pos *pos)
-{
-    struct stack *node = malloc(sizeof *node);
-    
-    node->pos = pos;
-    node->next = stkptr->next;
-    stkptr->next = node; /* put node just after the head */
-}
-void dump_pos(struct pos *pos)
-{
-    printf("%016llx\n", pos->board);
-    printf("%2d %2d\n", pos->zero[0], pos->zero[1]);
-} //>>//////////////////////////////////////////////////////////
-void dump_node(struct stack *node)
-{
-    dump_pos(node->pos);
-} //..//////////////////////////////////////////////////////////
-void del(struct stack *node)
-{
-    free(node);
-} //__//////////////////////////////////////////////////////////
-void loop(struct stack *stkptr, void (*f)(struct stack *))
-{
-    struct stack *node = stkptr->next;
-    struct stack *next;
-    
-    while (node) {
-	next = node->next;
-	f(node);
-	node = next;
-    }
-}
-//``////////////////////////////////////////////////////////////
-int find(struct stack *stkptr, struct pos *pos)
-{
-    struct stack *node = stkptr;
-    
-    while (node = node->next)
-	if (node->pos->board == pos->board) return 1;
-
-    return 0;
-} //;;//////////////////////////////////////////////////////////
-int size(struct stack *stkptr)
-{
-    int s = 0;
-    struct stack *node = stkptr;
-    
-    while (node = node->next) s++;
-
-    return s;
-}
-void clear(struct stack *stkptr)
-{
-    loop(stkptr, del);
-
-    stkptr->next = NULL;
-}
-//oo////////////////////////////////////////////////////////////
-struct pos *depth_srch(void)
-{
-    // parent stack
-    struct stack ahead_pare = { NULL, NULL };
-    struct stack *pare = &ahead_pare;
-    // children stack
-    struct stack ahead_chld = { NULL, NULL };
-    struct stack *chld = &ahead_chld;
-
-    push(pare, &ipos);
-    push( rec, &ipos);
-
-    struct stack *it;       // iterator
-    struct pos *pos, *pos1; // pos and pos prime
-    int i, j, k;            // what is this?
-    ////////////////////////////////////////////////////////////
-    int depth = 0;
-    while (1) { // loop until find
-	it = pare;
-	while (it = it->next) { // parent loop
-	    pos = it->pos;
-	    // are ve done?
-	    if (pos->board == fpos.board) return pos;
-	    // ck possible moves for both zeroes
-	    for (j = 0; j < NZR; j++) {
-		k = pos->zero[j]; // void square namba
-		// loop over neighbors
-		for (i = 0; i < nbrz[k]; i++) {
-		    if (hood[k][i] < 8) continue;
-		    pos1 = move(pos, j, hood[k][i]);
-		    // ck if pos1 in rec stack
-		    if (!find(rec, pos1)) {
-			pos1->parent = pos;
-			push(chld, pos1);
-			push(rec, pos1);
-		    } else {
-			free(pos1); // we don't need that
-		    }
-		}
-	    }
-	} //////////////////////////////////////////////////////
-	clear(pare);
-	it = pare; // switch roles
-	pare = chld;
-	chld = it;
-    }
-} //$$//////////////////////////////////////////////////////////
-void thinking(void)
-{
-    struct pos *pos = depth_srch();
-    clear(rec);
-    while (pos) {
-    	push(rec, pos);
-    	pos = pos->parent;
-    }
-    struct stack *node = rec->next;
-    int *last = node->pos->zero;
-    
-    int j, sqr, fig;
-    int *dst;
-    while (node = node->next) {
-	for (j = 0; j < NZR; j++) {
-	    sqr = node->pos->zero[j];
-	    if (sqr != last[j]) {
-		dst = sqrcoor[sqr + 1];
-		fig = sqrfig[sqr + 1];
-		erase(dst);
-		svitch(j, dst);
-		draw_figure(fig);
-		pooz(1);
-	    }
-	}
-	last = node->pos->zero;
-    }
-}
+int push(struct stack *stkptr, struct pos *pos) /*            */
+{ /*                                                          */
+    struct stack *node = malloc(sizeof *node); /*             */
+    /*                                                        */
+    node->pos = pos; /*                                       */
+    node->next = stkptr->next; /*                             */
+    stkptr->next = node; /* put node just after the head      */
+} /*                                                          */
+////////////////////////////////////////////////////////////////
+void dump_pos(struct pos *pos) /*                             */
+{ /*                                                          */
+    printf("%016llx\n", pos->board); /*                       */
+    printf("%2d %2d\n", pos->zero[0], pos->zero[1]); /*       */
+} /*                                                          */
+////////////////////////////////////////////////////////////////
+void dump_node(struct stack *node) /*                         */
+{ /*                                                          */
+    dump_pos(node->pos); /*                                   */
+} /*                                                          */
+////////////////////////////////////////////////////////////////
+void del(struct stack *node) /*                               */
+{ /*                                                          */
+    free(node); /*                                            */
+} /*                                                          */
+////////////////////////////////////////////////////////////////
+void loop(struct stack *stkptr, void (*f)(struct stack *)) /* */
+{ /*                                                          */
+    struct stack *node = stkptr->next; /*                     */
+    struct stack *next; /*                                    */
+    /*                                                        */
+    while (node) { /*                                         */
+	next = node->next; /*                                 */
+	f(node); /*                                           */
+	node = next; /*                                       */
+    } /*                                                      */
+} /*                                                          */
+////////////////////////////////////////////////////////////////
+int find(struct stack *stkptr, struct pos *pos) /*            */
+{ /*                                                          */
+    struct stack *node = stkptr; /*                           */
+    /*                                                        */
+    while (node = node->next) /*                              */
+	if (node->pos->board == pos->board) return 1; /*      */
+    /*                                                        */
+    return 0; /*                                              */
+} /*                                                          */
+////////////////////////////////////////////////////////////////
+int size(struct stack *stkptr) /*                             */
+{ /*                                                          */
+    int s = 0; /*                                             */
+    struct stack *node = stkptr; /*                           */
+    /*                                                        */
+    while (node = node->next) s++; /*                         */
+    /*                                                        */
+    return s; /*                                              */
+} /*                                                          */
+void clear(struct stack *stkptr) /*                           */
+{ /*                                                          */
+    loop(stkptr, del); /*                                     */
+    /*                                                        */
+    stkptr->next = NULL; /*                                   */
+} /*                                                          */
+////////////////////////////////////////////////////////////////
+struct pos *depth_srch(void) /*                               */
+{ /*                                                          */
+    /* parent stack                                           */
+    struct stack ahead_pare = { NULL, NULL }; /*              */
+    struct stack *pare = &ahead_pare; /*                      */
+    /* children stack                                         */
+    struct stack ahead_chld = { NULL, NULL }; /*              */
+    struct stack *chld = &ahead_chld; /*                      */
+    /*                                                        */
+    push(pare, &ipos); /*                                     */
+    push( rec, &ipos); /*                                     */
+    /*                                                        */
+    struct stack *it; /* iterator                             */
+    struct pos *pos, *pos1; /* pos and pos prime              */
+    int i, j, k; /* what is this?                             */
+    /*                                                        */
+    int depth = 0; /*                                         */
+    while (1) { /* loop until find                            */
+	it = pare; /*                                         */
+	while (it = it->next) { /* parent loop                */
+	    pos = it->pos; /*                                 */
+	    /* are ve done?                                   */
+	    if (pos->board == fpos.board) return pos; /*      */
+	    /* ck possible moves for both zeroes              */
+	    for (j = 0; j < NZR; j++) { /*                    */
+		k = pos->zero[j]; /* void square namba        */
+		/* loop over neighbors                        */
+		for (i = 0; i < nbrz[k]; i++) { /*            */
+		    if (hood[k][i] < 8) continue; /*          */
+		    pos1 = move(pos, j, hood[k][i]); /*       */
+		    /* ck if pos1 in rec stack                */
+		    if (!find(rec, pos1)) { /*                */
+			pos1->parent = pos; /*                */
+			push(chld, pos1); /*                  */
+			push(rec, pos1); /*                   */
+		    } else { /*                               */
+			free(pos1); /* we don't need that     */
+		    } /*                                      */
+		} /*                                          */
+	    } /*                                              */
+	} /*                                                  */
+	clear(pare); /*                                       */
+	it = pare; /* switch roles                            */
+	pare = chld; /*                                       */
+	chld = it; /*                                         */
+    } /*                                                      */
+} /*                                                          */
+////////////////////////////////////////////////////////////////
+void thinking(void) /*                                        */
+{ /*                                                          */
+    struct pos *pos = depth_srch(); /*                        */
+    clear(rec); /*                                            */
+    while (pos) { /*                                          */
+    	push(rec, pos); /*                                    */
+    	pos = pos->parent; /*                                 */
+    } /*                                                      */
+    struct stack *node = rec->next; /*                        */
+    int *last = node->pos->zero; /*                           */
+    /*                                                        */
+    int j, sqr, fig; /*                                       */
+    int *dst; /*                                              */
+    while (node = node->next) { /*                            */
+	for (j = 0; j < NZR; j++) { /*                        */
+	    sqr = node->pos->zero[j]; /*                      */
+	    if (sqr != last[j]) { /*                          */
+		dst = sqrcoor[sqr + 1]; /*                    */
+		fig = sqrfig[sqr + 1]; /*                     */
+		erase(dst); /*                                */
+		svitch(j, dst); /*                            */
+		draw_figure(fig); /*                          */
+		pooz(1); /*                                   */
+	    } /*                                              */
+	} /*                                                  */
+	last = node->pos->zero; /*                            */
+    } /*                                                      */
+} /*                                                          */
+////////////////////////////////////////////////////////////////
 int main(void) /* B4epa u3npaTux egHa ncyBHs B KoCMoCa        */
 { /*                                                          */
     init(); /*                                                */
-    for (int i = 1; i <= 8; i++) {
-	escort(i);
-    }
-    convert();
-    thinking();
+    for (int i = 1; i <= 8; i++) { /*                         */
+	escort(i); /*                                         */
+    } /*                                                      */
+    convert(); /*                                             */
+    thinking(); /*                                            */
     fin(); /*                                                 */
-
+    /*                                                        */
     return 0; /*                                              */
 } //_-__.._*:_*"*?:::?.--_._*""*-_.":.."?..:?_::.*_:*"_*:. bugs:
 // oo .. xo .o  o_o  -- ,, o- ^^ ** `` oO OO .. :: .: .- *o ,.
